@@ -51,13 +51,13 @@
     left: 2.5em;
     border-radius: 50%;
 }
-/*
-#name {
-    margin-top: 2em;
-    font: 1em;
-} */
 
 #change {
     margin-top: 2em;
+    height: 2.5em;
+}
+
+#hints {
+    margin-top: 1em;
     height: 2.5em;
 }

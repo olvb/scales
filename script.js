@@ -31,7 +31,7 @@ class Shape {
     }
 }
 
-const ALLOWED_VALUES = ["x", "M"]
+const ALLOWED_VALUES = ["x", "M", "m"]
 
 const _TEMPLATE = `
 |---|---|---|---|---|---|
@@ -90,57 +90,62 @@ const SHAPES_PENTA = [PENTA_1, PENTA_2, PENTA_3, PENTA_4, PENTA_5];
 const MAJOR = "major"
 const MAJOR_1 = new Shape(MAJOR, 1, `
 |---|-x-|-M-|---|-x-|---|
-|---|---|-x-|---|-x-|---|
+|---|---|-x-|---|-m-|---|
 |---|-x-|---|-x-|-x-|---|
-|---|-x-|---|-x-|-M-|---|
+|---|-m-|---|-x-|-M-|---|
 |---|-x-|-x-|---|-x-|---|
 |---|-x-|-M-|---|-x-|---|
 `)
 const MAJOR_2 = new Shape(MAJOR, 2, `
 |---|-x-|---|-x-|-x-|---|
-|---|-x-|---|-x-|-M-|---|
+|---|-m-|---|-x-|-M-|---|
 |-x-|-x-|---|-x-|---|---|
 |-x-|-M-|---|-x-|---|---|
-|---|-x-|---|-x-|---|---|
+|---|-x-|---|-m-|---|---|
 |---|-x-|---|-x-|-x-|---|
 `)
 const MAJOR_3 = new Shape(MAJOR, 3, `
 |---|-x-|-x-|---|-x-|---|
 |---|-x-|-M-|---|-x-|---|
-|---|-x-|---|-x-|---|---|
+|---|-x-|---|-m-|---|---|
 |---|-x-|---|-x-|-x-|---|
-|---|-x-|---|-x-|-M-|---|
+|---|-m-|---|-x-|-M-|---|
 |---|-x-|-x-|---|-x-|---|
 `)
 const MAJOR_4 = new Shape(MAJOR, 4, `
-|---|-x-|---|-x-|---|---|
+|---|-x-|---|-m-|---|---|
 |---|-x-|---|-x-|-x-|---|
-|-x-|---|-x-|-M-|---|---|
+|-m-|---|-x-|-M-|---|---|
 |-x-|-x-|---|-x-|---|---|
 |-x-|-M-|---|-x-|---|---|
-|---|-x-|---|-x-|---|---|
+|---|-x-|---|-m-|---|---|
 `)
 const MAJOR_5 = new Shape(MAJOR, 5, `
-|---|-x-|---|-x-|-M-|---|
+|---|-m-|---|-x-|-M-|---|
 |---|-x-|-x-|---|-x-|---|
 |-x-|-M-|---|-x-|---|---|
-|---|-x-|---|-x-|---|---|
+|---|-x-|---|-m-|---|---|
 |---|-x-|---|-x-|-x-|---|
-|---|-x-|---|-x-|-M-|---|
+|---|-m-|---|-x-|-M-|---|
 `)
 const SHAPES_MAJOR = [MAJOR_1, MAJOR_2, MAJOR_3, MAJOR_4, MAJOR_5];
+
+const COLOR = "black";
+const HINT_COLORS = {"x": "black", "M": "green", "m": "red"}
 
 class App {
     constructor(shapes, nbFrets = 6) {
         this.shapes = shapes.slice();
         this.nbFrets = nbFrets;
+        this.shapeToShow = null;
+        this.showHints = false;
         this.build();
         this.run();
     }
 
     build() {
         this.buildFretBoard();
-        this.buildChangeButton();
+        this.buildMainButtons();
         for (let shape of this.shapes) {
             console.log(shape)
             this.buildShape(shape);
@@ -187,7 +192,6 @@ class App {
 
     buildShape(shape) {
         let array = shape.array
-        const COLOR_BY_VALUE = { "x": "black", "M": "black" }
         for (let stringIndex = 0; stringIndex < NB_STRINGS; stringIndex++) {
             for (let fretIndex = 0; fretIndex < array[stringIndex].length; fretIndex++) {
                 let value = array[stringIndex][fretIndex];
@@ -198,7 +202,8 @@ class App {
                 let finger = document.createElement("div");
                 finger.className = "finger";
                 finger.classList.add(shape.className);
-                finger.style["background-color"] = COLOR_BY_VALUE[value];
+                finger.style["background-color"] = COLOR;
+                finger.setAttribute("hint-color", HINT_COLORS[value]);
                 let cell_id = `cell_${stringIndex}_${fretIndex}`;
                 let cell = document.getElementById(cell_id);
                 cell.appendChild(finger);
@@ -208,26 +213,40 @@ class App {
 
     changeShape() {
         let shapeIndexToShow = 1 + Math.floor(Math.random() * (this.shapes.length - 1));
-        let shapeToShow = this.shapes[shapeIndexToShow];
+        this.shapeToShow = this.shapes[shapeIndexToShow];
         this.shapes.splice(shapeIndexToShow, 1);
-        this.shapes.unshift(shapeToShow);
+        this.shapes.unshift(this.shapeToShow);
+
+        this.showHints = false;
 
         for (let shape of this.shapes) {
             let shapeClass = shape.className;
-            let state = (shapeClass == shapeToShow.className) ? "block" : "none";
-            var fingers = document.getElementsByClassName(shapeClass)
+            let state = (shapeClass == this.shapeToShow.className) ? "block" : "none";
+            let fingers = document.getElementsByClassName(shapeClass)
             for (let finger of fingers) {
                 finger.style["display"] = state;
+                let color = this.showHints ? finger.getAttribute("hint-color") : COLOR;
+                finger.style["background-color"] = color;
             }
         }
-
-        // let name = document.getElementById("name");
-        // name.innerText = shape.name;
     }
 
-    buildChangeButton() {
+    toggleHints() {
+        this.showHints = !this.showHints;
+        let fingers = document.getElementsByClassName(this.shapeToShow.className);
+        for (let finger of fingers) {
+            let color = this.showHints ? finger.getAttribute("hint-color") : COLOR;
+            finger.style["background-color"] = color;
+        }
+    }
+
+    buildMainButtons() {
         let change = document.getElementById("change");
-        change.onclick = this.changeShape.bind(this);
+        change.onclick = () => { this.changeShape(); };
+        let hints = document.getElementById("hints");
+        hints.onclick = () => {
+            this.toggleHints();
+        };
     }
 
     run() {
